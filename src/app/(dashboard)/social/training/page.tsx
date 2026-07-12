@@ -50,6 +50,7 @@ export default async function TrainingPage({
       <TrainingClient
         data={JSON.parse(JSON.stringify(trainings))}
         canManage={canManage}
+        canComplete={can(user.role, "training.complete")}
         completedIds={myCompletions.map((c) => c.trainingId)}
         departments={departments.map((d) => ({ label: d.name, value: d.id }))}
         autoOpen={openNew === "1" && canManage}

@@ -50,13 +50,16 @@ export function AcknowledgementsClient({
   myPending,
   allAcks,
   canManage,
+  canAcknowledge,
 }: {
   myPending: Pending[];
   allAcks: Ack[];
   canManage: boolean;
+  canAcknowledge: boolean;
 }) {
   return (
     <div className="space-y-6">
+      {canAcknowledge && (
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -95,6 +98,7 @@ export function AcknowledgementsClient({
           )}
         </CardContent>
       </Card>
+      )}
 
       {canManage && (
         <div>

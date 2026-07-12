@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Leaf, Users, Landmark, FileBarChart, SlidersHorizontal, ArrowRight } from "lucide-react";
-import { requireUser } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/auth/session";
 import { PageHeader } from "@/components/shared/page-header";
 import { ModuleTabs } from "@/components/layout/module-tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +16,7 @@ const REPORTS = [
 ];
 
 export default async function ReportsPage() {
-  await requireUser();
+  await requireCapability("report.generate");
   return (
     <>
       <PageHeader title="Reports" description="Generate and export ESG analytics as PDF, Excel or CSV." />

@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { can } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/page-header";
@@ -9,7 +9,7 @@ export const metadata = { title: "Categories" };
 export const dynamic = "force-dynamic";
 
 export default async function CategoriesPage() {
-  const user = await requireUser();
+  const user = await requireCapability("category.manage");
   const categories = await prisma.category.findMany({
     where: { organizationId: user.organizationId },
     orderBy: [{ type: "asc" }, { name: "asc" }],
