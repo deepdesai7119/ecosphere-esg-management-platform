@@ -74,11 +74,11 @@ export default async function LoginPage() {
             <p className="mb-2 text-xs font-medium text-muted-foreground">
               Demo accounts · password <code className="rounded bg-background px-1 py-0.5 font-mono">Demo@123</code>
             </p>
-            <ul className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
+            <ul className="space-y-0.5 text-xs">
               {DEMO_ACCOUNTS.map((a) => (
-                <li key={a.email} className="flex items-center justify-between gap-2 rounded px-1">
-                  <span className="text-muted-foreground">{a.role}</span>
-                  <span className="font-mono text-[11px]">{a.email}</span>
+                <li key={a.email} className="flex items-center justify-between gap-3 rounded px-1 py-0.5">
+                  <span className="shrink-0 text-muted-foreground">{a.role}</span>
+                  <span className="truncate font-mono text-[11px]">{a.email}</span>
                 </li>
               ))}
             </ul>

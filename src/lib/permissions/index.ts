@@ -22,7 +22,6 @@ export type Capability =
   | "csr.approve"
   | "csr.join"
   | "training.manage"
-  | "training.complete"
   | "challenge.manage"
   | "challenge.approve"
   | "challenge.join"
@@ -53,7 +52,6 @@ const ALL: Capability[] = [
   "csr.approve",
   "csr.join",
   "training.manage",
-  "training.complete",
   "challenge.manage",
   "challenge.approve",
   "challenge.join",
@@ -70,8 +68,21 @@ const ALL: Capability[] = [
   "notification.broadcast",
 ];
 
+/**
+ * Participation capabilities are for individual contributors (join a CSR
+ * activity/challenge, redeem a reward, acknowledge a policy as an assignee).
+ * ORG_ADMIN gets every *administrative* capability but not these — an admin
+ * manages and approves engagement, they don't personally participate in it.
+ */
+const PARTICIPATION_ONLY: Capability[] = [
+  "csr.join",
+  "challenge.join",
+  "reward.redeem",
+  "policy.acknowledge",
+];
+
 const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
-  ORG_ADMIN: ALL,
+  ORG_ADMIN: ALL.filter((cap) => !PARTICIPATION_ONLY.includes(cap)),
   ESG_MANAGER: [
     "category.manage",
     "factor.manage",
@@ -83,7 +94,6 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "csr.approve",
     "csr.join",
     "training.manage",
-    "training.complete",
     "challenge.manage",
     "challenge.approve",
     "badge.manage",
@@ -101,14 +111,13 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "operation.manage",
     "csr.approve",
     "csr.join",
-    "training.complete",
     "challenge.approve",
     "challenge.join",
     "compliance.manage",
     "policy.acknowledge",
     "report.generate",
   ],
-  EMPLOYEE: ["csr.join", "training.complete", "challenge.join", "policy.acknowledge", "reward.redeem"],
+  EMPLOYEE: ["csr.join", "challenge.join", "policy.acknowledge", "reward.redeem"],
   AUDITOR: ["audit.manage", "compliance.manage", "report.generate"],
 };
 
