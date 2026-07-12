@@ -91,7 +91,9 @@ export async function updateChallengeProgress(params: {
 /**
  * Approve / reject a challenge submission. Enforces evidence server-side and
  * credits XP exactly once; approval increments the employee's completed count
- * and triggers badge evaluation.
+ * and triggers badge evaluation. When the challenge is linked to an
+ * environmental goal, each approval also adds `goalContribution` to the goal's
+ * current value (and un-approving reverses it) in the same transaction.
  */
 export async function reviewChallengeParticipation(params: {
   participationId: string;
@@ -118,6 +120,10 @@ export async function reviewChallengeParticipation(params: {
 
   const wasApproved = participation.approvalStatus === "APPROVED";
   const xp = challenge.xp;
+  const goalDelta =
+    challenge.goalId && challenge.goalContribution && Number(challenge.goalContribution) > 0
+      ? challenge.goalContribution
+      : null;
 
   await prisma.$transaction(async (tx) => {
     if (params.decision === "APPROVED" && !wasApproved) {
@@ -129,6 +135,12 @@ export async function reviewChallengeParticipation(params: {
           completedChallengeCount: { increment: 1 },
         },
       });
+      if (goalDelta) {
+        await tx.environmentalGoal.update({
+          where: { id: challenge.goalId! },
+          data: { currentValue: { increment: goalDelta } },
+        });
+      }
     } else if (params.decision === "REJECTED" && wasApproved) {
       await tx.user.update({
         where: { id: participation.employeeId },
@@ -138,6 +150,12 @@ export async function reviewChallengeParticipation(params: {
           completedChallengeCount: { decrement: 1 },
         },
       });
+      if (goalDelta) {
+        await tx.environmentalGoal.update({
+          where: { id: challenge.goalId! },
+          data: { currentValue: { decrement: goalDelta } },
+        });
+      }
     }
 
     await tx.challengeParticipation.update({
