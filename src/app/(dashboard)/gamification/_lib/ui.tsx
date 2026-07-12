@@ -1,57 +1,13 @@
-import {
-  Award,
-  Trophy,
-  Medal,
-  Star,
-  Crown,
-  Flame,
-  Zap,
-  Target,
-  Leaf,
-  Heart,
-  ShieldCheck,
-  Rocket,
-  Gem,
-  ThumbsUp,
-  Sparkles,
-  TrendingUp,
-  HandHeart,
-  BookOpenCheck,
-  type LucideIcon,
-} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { BadgeVariant } from "@/lib/constants";
 import { formatNumber } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
-/** Curated set of icons a badge may use; unknown names fall back to Award. */
-export const BADGE_ICON_MAP: Record<string, LucideIcon> = {
-  Award,
-  Trophy,
-  Medal,
-  Star,
-  Crown,
-  Flame,
-  Zap,
-  Target,
-  Leaf,
-  Heart,
-  ShieldCheck,
-  Rocket,
-  Gem,
-  ThumbsUp,
-  Sparkles,
-  TrendingUp,
-  HandHeart,
-  BookOpenCheck,
-};
-
-export const BADGE_ICON_OPTIONS = Object.keys(BADGE_ICON_MAP).map((k) => ({ label: k, value: k }));
-
-export function BadgeIcon({ name, className }: { name?: string | null; className?: string }) {
-  const Icon = (name && BADGE_ICON_MAP[name]) || Award;
-  return <Icon className={cn("size-5", className)} />;
-}
+// Icon set is shared with challenges and categories — see entity-icon.tsx.
+export {
+  ENTITY_ICON_MAP as BADGE_ICON_MAP,
+  ENTITY_ICON_OPTIONS as BADGE_ICON_OPTIONS,
+  EntityIcon as BadgeIcon,
+} from "@/components/shared/entity-icon";
 
 // ------------------------------- Difficulty -------------------------------
 

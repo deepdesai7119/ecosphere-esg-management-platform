@@ -29,6 +29,7 @@ export const categoryCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
   type: z.enum(CATEGORY_TYPES),
   description: z.string().optional(),
+  icon: z.string().optional(),
   status: z.enum(RECORD_STATUS).optional(),
 });
 export const categoryUpdateSchema = categoryCreateSchema.partial();
