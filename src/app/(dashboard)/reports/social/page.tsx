@@ -1,11 +1,11 @@
-import { requireUser } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/auth/session";
 import { TypedReport, type ReportSearchParams } from "../_components/typed-report";
 
 export const metadata = { title: "Social Report" };
 export const dynamic = "force-dynamic";
 
 export default async function Page({ searchParams }: { searchParams: Promise<ReportSearchParams> }) {
-  const user = await requireUser();
+  const user = await requireCapability("report.generate");
   const sp = await searchParams;
   return (
     <TypedReport

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { can, type Capability } from "@/lib/permissions";
 import type { Role } from "@prisma/client";
 
 interface Action {
@@ -21,29 +22,27 @@ interface Action {
   href: string;
   icon: LucideIcon;
   color: string;
+  /** If set, only shown when the role holds this capability. */
+  capability?: Capability;
 }
 
-const MANAGER_ACTIONS: Action[] = [
-  { label: "Log operation", href: "/environmental/operations?new=1", icon: Factory, color: "text-env" },
-  { label: "Add goal", href: "/environmental/goals?new=1", icon: Target, color: "text-env" },
-  { label: "New CSR activity", href: "/social/activities?new=1", icon: HandHeart, color: "text-social" },
-  { label: "New challenge", href: "/gamification/challenges?new=1", icon: Flag, color: "text-game" },
-  { label: "Add audit", href: "/governance/audits?new=1", icon: ClipboardCheck, color: "text-gov" },
-  { label: "Raise issue", href: "/governance/compliance?new=1", icon: ShieldAlert, color: "text-gov" },
-  { label: "Generate report", href: "/reports/esg-summary", icon: FileBarChart, color: "text-foreground" },
-];
-
-const EMPLOYEE_ACTIONS: Action[] = [
+const ACTIONS: Action[] = [
+  { label: "Log operation", href: "/environmental/operations?new=1", icon: Factory, color: "text-env", capability: "operation.manage" },
+  { label: "Add goal", href: "/environmental/goals?new=1", icon: Target, color: "text-env", capability: "goal.manage" },
+  { label: "New CSR activity", href: "/social/activities?new=1", icon: HandHeart, color: "text-social", capability: "csr.manage" },
+  { label: "New challenge", href: "/gamification/challenges?new=1", icon: Flag, color: "text-game", capability: "challenge.manage" },
+  { label: "Add audit", href: "/governance/audits?new=1", icon: ClipboardCheck, color: "text-gov", capability: "audit.manage" },
+  { label: "Raise issue", href: "/governance/compliance?new=1", icon: ShieldAlert, color: "text-gov", capability: "compliance.manage" },
+  { label: "Generate report", href: "/reports/esg-summary", icon: FileBarChart, color: "text-foreground", capability: "report.generate" },
   { label: "My work", href: "/my-work", icon: ListTodo, color: "text-foreground" },
-  { label: "Join challenge", href: "/gamification/challenges", icon: Flag, color: "text-game" },
-  { label: "CSR activities", href: "/social/activities", icon: HandHeart, color: "text-social" },
+  { label: "Join challenge", href: "/gamification/challenges", icon: Flag, color: "text-game", capability: "challenge.join" },
+  { label: "CSR activities", href: "/social/activities", icon: HandHeart, color: "text-social", capability: "csr.join" },
   { label: "Leaderboard", href: "/gamification/leaderboard", icon: Trophy, color: "text-game" },
-  { label: "Redeem rewards", href: "/gamification/rewards", icon: Gift, color: "text-game" },
+  { label: "Redeem rewards", href: "/gamification/rewards", icon: Gift, color: "text-game", capability: "reward.redeem" },
 ];
 
 export function QuickActions({ role }: { role: Role }) {
-  const actions =
-    role === "EMPLOYEE" || role === "AUDITOR" ? EMPLOYEE_ACTIONS : MANAGER_ACTIONS;
+  const actions = ACTIONS.filter((a) => !a.capability || can(role, a.capability));
   return (
     <Card>
       <CardHeader className="pb-2">

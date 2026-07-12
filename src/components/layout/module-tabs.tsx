@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV } from "@/config/nav";
+import { useSession } from "next-auth/react";
+import { navForRole } from "@/config/nav";
 import { MODULES, type ModuleKey } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export function ModuleTabs({ groupHref, module }: { groupHref: string; module?: ModuleKey }) {
   const pathname = usePathname();
-  const group = NAV.find((g) => g.href === groupHref);
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+  if (!role) return null;
+  const group = navForRole(role).find((g) => g.href === groupHref);
   if (!group?.items) return null;
   const accent = module ? MODULES[module].hex : undefined;
 

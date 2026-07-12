@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { can } from "@/lib/permissions";
 import { PageHeader } from "@/components/shared/page-header";
@@ -9,7 +9,7 @@ export const metadata = { title: "Users" };
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
-  const user = await requireUser();
+  const user = await requireCapability("user.manage");
   const [users, departments] = await Promise.all([
     prisma.user.findMany({
       where: { organizationId: user.organizationId },

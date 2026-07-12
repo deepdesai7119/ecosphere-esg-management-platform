@@ -94,6 +94,7 @@ export default async function GovernanceOverviewPage() {
           <DonutChart data={severityData} />
         </ChartCard>
 
+        {canManage && (
         <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -130,6 +131,7 @@ export default async function GovernanceOverviewPage() {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
     </>
   );

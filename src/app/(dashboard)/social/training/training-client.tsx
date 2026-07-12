@@ -30,12 +30,14 @@ const STATUS_OPTIONS: Option[] = [
 export function TrainingClient({
   data,
   canManage,
+  canComplete,
   completedIds,
   departments,
   autoOpen,
 }: {
   data: Training[];
   canManage: boolean;
+  canComplete: boolean;
   completedIds: string[];
   departments: Option[];
   autoOpen?: boolean;
@@ -57,7 +59,7 @@ export function TrainingClient({
           <Badge variant="success">
             <CheckCircle2 className="size-3" /> Completed
           </Badge>
-        ) : (
+        ) : !canComplete ? null : (
           <ActionButton
             endpoint={`/api/social/training/${row.original.id}/complete`}
             label="Mark complete"

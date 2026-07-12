@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/auth/session";
 import { can } from "@/lib/permissions";
 import { getEsgConfig } from "@/server/services/config.service";
 import { PageHeader } from "@/components/shared/page-header";
@@ -9,7 +9,7 @@ export const metadata = { title: "ESG Configuration" };
 export const dynamic = "force-dynamic";
 
 export default async function EsgConfigurationPage() {
-  const user = await requireUser();
+  const user = await requireCapability("esgConfig.manage");
   const config = await getEsgConfig(user.organizationId);
 
   return (

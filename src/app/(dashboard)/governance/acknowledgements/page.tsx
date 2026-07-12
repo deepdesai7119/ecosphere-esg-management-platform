@@ -50,6 +50,7 @@ export default async function AcknowledgementsPage() {
         myPending={JSON.parse(JSON.stringify(myPending))}
         allAcks={JSON.parse(JSON.stringify(allAcks))}
         canManage={canManage}
+        canAcknowledge={can(user.role, "policy.acknowledge")}
       />
     </>
   );

@@ -1,10 +1,10 @@
-import { apiOk, handle, parseQuery, requireApiUser } from "@/lib/api";
+import { apiOk, handle, parseQuery, requireApiCapability } from "@/lib/api";
 import { getReport, type ReportFilters } from "@/server/services/report.service";
 import { reportQuerySchema, coerceFrom, coerceTo } from "@/lib/validations/reports";
 
 export async function GET(req: Request) {
   return handle(async () => {
-    const user = await requireApiUser();
+    const user = await requireApiCapability("report.generate");
     const q = parseQuery(req, reportQuerySchema);
     const filters: ReportFilters = {
       organizationId: user.organizationId,
