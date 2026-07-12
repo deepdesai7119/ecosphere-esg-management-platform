@@ -485,10 +485,10 @@ export async function buildCustomReport(filters: ReportFilters): Promise<ReportD
   const { organizationId, departmentId, employeeId, challengeId, esgCategory } = filters;
   const deptWhere = departmentId ? { departmentId } : {};
   const range = dateRange(filters.from, filters.to);
-  const module = (filters.module ?? "environmental").toLowerCase();
+  const moduleKey = (filters.module ?? "environmental").toLowerCase();
 
   const appliedFilters: (string | number)[][] = [
-    ["Module", module],
+    ["Module", moduleKey],
     ["Department", departmentId ?? "All"],
     ["From", fmtDate(filters.from)],
     ["To", fmtDate(filters.to)],
@@ -500,7 +500,7 @@ export async function buildCustomReport(filters: ReportFilters): Promise<ReportD
   let dataSection: ReportSection;
   const summary: Record<string, string | number> = {};
 
-  if (module === "social") {
+  if (moduleKey === "social") {
     const where: Prisma.CsrParticipationWhereInput = {
       activity: { organizationId, ...deptWhere, ...(esgCategory ? { categoryId: esgCategory } : {}) },
       ...(employeeId ? { employeeId } : {}),
@@ -525,7 +525,7 @@ export async function buildCustomReport(filters: ReportFilters): Promise<ReportD
     };
     summary["Records"] = rows.length;
     summary["Points earned"] = rows.reduce((s, r) => s + r.pointsEarned, 0);
-  } else if (module === "governance") {
+  } else if (moduleKey === "governance") {
     const where: Prisma.ComplianceIssueWhereInput = {
       organizationId,
       ...deptWhere,
@@ -553,7 +553,7 @@ export async function buildCustomReport(filters: ReportFilters): Promise<ReportD
     };
     summary["Records"] = rows.length;
     summary["Overdue"] = rows.filter((r) => r.isOverdue).length;
-  } else if (module === "gamification") {
+  } else if (moduleKey === "gamification") {
     const where: Prisma.ChallengeParticipationWhereInput = {
       challenge: {
         organizationId,

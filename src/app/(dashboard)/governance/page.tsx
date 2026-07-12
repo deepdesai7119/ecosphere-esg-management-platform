@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, ClipboardCheck, FileText, RefreshCw, ShieldAlert } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardCheck, FileText, ShieldAlert } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { can } from "@/lib/permissions";
@@ -68,7 +68,6 @@ export default async function GovernanceOverviewPage() {
               endpoint="/api/jobs/check-overdue-compliance"
               method="post"
               label="Run Compliance Check"
-              icon={RefreshCw}
               variant="outline"
               successMessage="Compliance check complete."
             />

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   Award,
-  BadgeCheck,
   Coins,
   FileText,
   HandHeart,
@@ -133,7 +132,6 @@ export default async function MyWorkPage() {
                     <ActionButton
                       endpoint={`/api/governance/policies/${a.policy.id}/acknowledge`}
                       label="Acknowledge"
-                      icon={BadgeCheck}
                       variant="outline"
                       successMessage="Policy acknowledged."
                     />

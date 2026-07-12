@@ -88,6 +88,7 @@ async function main() {
   // ---- Organisation + config ----
   const org = await prisma.organization.create({
     data: {
+      id: "verdantiq-greenworks-org",
       name: "GreenWorks Industries",
       code: "GREENWORKS",
       environmentalWeight: 40,
