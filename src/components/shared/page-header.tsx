@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Fragment } from "react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageInfo } from "@/components/shared/page-info";
 
 export interface Crumb {
   label: string;
@@ -51,6 +52,7 @@ export function PageHeader({
             )}
           >
             {title}
+            <PageInfo />
           </h1>
           {description && (
             <p className="mt-1 text-sm text-muted-foreground">{description}</p>

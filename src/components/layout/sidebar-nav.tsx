@@ -8,7 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { NAV, type NavGroup } from "@/config/nav";
+import { navForRole, type NavGroup } from "@/config/nav";
 import { MODULES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Role } from "@prisma/client";
@@ -31,10 +31,7 @@ export function SidebarNav({
 }) {
   const pathname = usePathname();
 
-  const groups = NAV.filter((g) => {
-    if (g.title === "Settings") return role === "ORG_ADMIN" || role === "ESG_MANAGER";
-    return true;
-  });
+  const groups = navForRole(role);
 
   return (
     <nav className="flex flex-col gap-0.5 px-2 py-3">

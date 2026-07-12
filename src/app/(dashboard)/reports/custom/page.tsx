@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { PageHeader } from "@/components/shared/page-header";
 import { ModuleTabs } from "@/components/layout/module-tabs";
@@ -8,7 +8,7 @@ export const metadata = { title: "Custom Report Builder" };
 export const dynamic = "force-dynamic";
 
 export default async function CustomReportPage() {
-  const user = await requireUser();
+  const user = await requireCapability("report.generate");
   const [departments, employees, challenges, categories] = await Promise.all([
     prisma.department.findMany({ where: { organizationId: user.organizationId, status: "ACTIVE" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.user.findMany({ where: { organizationId: user.organizationId, status: "ACTIVE" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),

@@ -65,6 +65,7 @@ export default async function MyWorkPage() {
     ]);
 
   const isApprover = can(user.role, "csr.approve") || can(user.role, "challenge.approve");
+  const canAcknowledge = can(user.role, "policy.acknowledge");
 
   return (
     <>
@@ -129,12 +130,14 @@ export default async function MyWorkPage() {
                         {a.policy.code} · due {formatDate(a.policy.acknowledgementDueDate)}
                       </p>
                     </div>
-                    <ActionButton
-                      endpoint={`/api/governance/policies/${a.policy.id}/acknowledge`}
-                      label="Acknowledge"
-                      variant="outline"
-                      successMessage="Policy acknowledged."
-                    />
+                    {canAcknowledge && (
+                      <ActionButton
+                        endpoint={`/api/governance/policies/${a.policy.id}/acknowledge`}
+                        label="Acknowledge"
+                        variant="outline"
+                        successMessage="Policy acknowledged."
+                      />
+                    )}
                   </li>
                 ))}
               </ul>

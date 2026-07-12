@@ -22,6 +22,7 @@ export type Capability =
   | "csr.approve"
   | "csr.join"
   | "training.manage"
+  | "training.complete"
   | "challenge.manage"
   | "challenge.approve"
   | "challenge.join"
@@ -52,6 +53,7 @@ const ALL: Capability[] = [
   "csr.approve",
   "csr.join",
   "training.manage",
+  "training.complete",
   "challenge.manage",
   "challenge.approve",
   "challenge.join",
@@ -81,6 +83,7 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "csr.approve",
     "csr.join",
     "training.manage",
+    "training.complete",
     "challenge.manage",
     "challenge.approve",
     "badge.manage",
@@ -98,13 +101,14 @@ const ROLE_CAPABILITIES: Record<Role, Capability[]> = {
     "operation.manage",
     "csr.approve",
     "csr.join",
+    "training.complete",
     "challenge.approve",
     "challenge.join",
     "compliance.manage",
     "policy.acknowledge",
     "report.generate",
   ],
-  EMPLOYEE: ["csr.join", "challenge.join", "policy.acknowledge", "reward.redeem"],
+  EMPLOYEE: ["csr.join", "training.complete", "challenge.join", "policy.acknowledge", "reward.redeem"],
   AUDITOR: ["audit.manage", "compliance.manage", "report.generate"],
 };
 

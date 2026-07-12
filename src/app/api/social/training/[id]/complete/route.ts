@@ -1,9 +1,9 @@
-import { apiOk, handle, requireApiUser } from "@/lib/api";
+import { apiOk, handle, requireApiCapability } from "@/lib/api";
 import { prisma } from "@/lib/db";
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   return handle(async () => {
-    const user = await requireApiUser();
+    const user = await requireApiCapability("training.complete");
     const { id } = await params;
     const completion = await prisma.trainingCompletion.upsert({
       where: { trainingId_employeeId: { trainingId: id, employeeId: user.id } },

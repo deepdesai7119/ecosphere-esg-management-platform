@@ -31,8 +31,9 @@ import {
   UserCog,
   Sprout,
 } from "lucide-react";
+import type { Role } from "@prisma/client";
 import type { ModuleKey } from "@/lib/constants";
-import type { Capability } from "@/lib/permissions";
+import { can, type Capability } from "@/lib/permissions";
 
 export interface NavLink {
   title: string;
@@ -47,6 +48,8 @@ export interface NavGroup {
   icon: LucideIcon;
   href: string;
   module?: ModuleKey;
+  /** If set, the whole group is only shown when the user has this capability. */
+  capability?: Capability;
   items?: NavLink[];
 }
 
@@ -119,6 +122,7 @@ export const NAV: NavGroup[] = [
     title: "Reports",
     icon: FileBarChart,
     href: "/reports",
+    capability: "report.generate",
     items: [
       { title: "Overview", href: "/reports", icon: FileBarChart },
       { title: "Environmental", href: "/reports/environmental", icon: Leaf },
@@ -133,11 +137,26 @@ export const NAV: NavGroup[] = [
     icon: Settings,
     href: "/settings",
     items: [
-      { title: "Departments", href: "/settings/departments", icon: Building2 },
-      { title: "Categories", href: "/settings/categories", icon: Tags },
-      { title: "Users", href: "/settings/users", icon: UserCog },
-      { title: "ESG Configuration", href: "/settings/esg-configuration", icon: SlidersHorizontal },
-      { title: "Notifications", href: "/settings/notifications", icon: Bell },
+      { title: "Departments", href: "/settings/departments", icon: Building2, capability: "department.manage" },
+      { title: "Categories", href: "/settings/categories", icon: Tags, capability: "category.manage" },
+      { title: "Users", href: "/settings/users", icon: UserCog, capability: "user.manage" },
+      { title: "ESG Configuration", href: "/settings/esg-configuration", icon: SlidersHorizontal, capability: "esgConfig.manage" },
+      { title: "Notifications", href: "/settings/notifications", icon: Bell, capability: "notification.broadcast" },
     ],
   },
 ];
+
+/**
+ * The nav filtered down to what a role can actually see: groups gated by their
+ * capability, items gated by theirs, and groups with items dropped entirely
+ * when every item is filtered out.
+ */
+export function navForRole(role: Role): NavGroup[] {
+  return NAV.flatMap((group) => {
+    if (group.capability && !can(role, group.capability)) return [];
+    if (!group.items) return [group];
+    const items = group.items.filter((i) => !i.capability || can(role, i.capability));
+    if (items.length === 0) return [];
+    return [{ ...group, items }];
+  });
+}
