@@ -29,16 +29,20 @@ export const dynamic = "force-dynamic";
 export default async function MyWorkPage() {
   const user = await requireUser();
 
+  const canAcknowledge = can(user.role, "policy.acknowledge");
+
   const [me, pendingAcks, myCsr, myChallenges, ownedIssues, pendingCsrReview, pendingChallengeReview] =
     await Promise.all([
       prisma.user.findUnique({
         where: { id: user.id },
         include: { _count: { select: { badges: true } } },
       }),
-      prisma.policyAcknowledgement.findMany({
-        where: { employeeId: user.id, acknowledgementStatus: "PENDING" },
-        include: { policy: { select: { id: true, title: true, code: true, acknowledgementDueDate: true } } },
-      }),
+      canAcknowledge
+        ? prisma.policyAcknowledgement.findMany({
+            where: { employeeId: user.id, acknowledgementStatus: "PENDING" },
+            include: { policy: { select: { id: true, title: true, code: true, acknowledgementDueDate: true } } },
+          })
+        : Promise.resolve([]),
       prisma.csrParticipation.findMany({
         where: { employeeId: user.id },
         include: { activity: { select: { title: true, evidenceRequired: true, points: true } } },
@@ -65,7 +69,6 @@ export default async function MyWorkPage() {
     ]);
 
   const isApprover = can(user.role, "csr.approve") || can(user.role, "challenge.approve");
-  const canAcknowledge = can(user.role, "policy.acknowledge");
 
   return (
     <>
@@ -130,14 +133,12 @@ export default async function MyWorkPage() {
                         {a.policy.code} · due {formatDate(a.policy.acknowledgementDueDate)}
                       </p>
                     </div>
-                    {canAcknowledge && (
-                      <ActionButton
-                        endpoint={`/api/governance/policies/${a.policy.id}/acknowledge`}
-                        label="Acknowledge"
-                        variant="outline"
-                        successMessage="Policy acknowledged."
-                      />
-                    )}
+                    <ActionButton
+                      endpoint={`/api/governance/policies/${a.policy.id}/acknowledge`}
+                      label="Acknowledge"
+                      variant="outline"
+                      successMessage="Policy acknowledged."
+                    />
                   </li>
                 ))}
               </ul>
