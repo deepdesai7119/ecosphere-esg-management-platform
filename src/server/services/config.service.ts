@@ -11,12 +11,10 @@ export async function getPrimaryOrganization(): Promise<Organization | null> {
  * first access so the rest of the app can rely on it existing.
  */
 export async function getEsgConfig(organizationId: string): Promise<EsgConfiguration> {
-  const existing = await prisma.esgConfiguration.findUnique({
+  return prisma.esgConfiguration.upsert({
     where: { organizationId },
-  });
-  if (existing) return existing;
-  return prisma.esgConfiguration.create({
-    data: { organizationId },
+    create: { organizationId },
+    update: {},
   });
 }
 
