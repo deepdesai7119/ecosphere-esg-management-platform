@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth/session";
 import { AppShell } from "@/components/layout/app-shell";
+import { ChatbotWidget } from "@/components/shared/ChatbotWidget";
 
 export default async function DashboardLayout({
   children,
@@ -10,6 +11,7 @@ export default async function DashboardLayout({
   return (
     <AppShell user={{ name: user.name, email: user.email, role: user.role }}>
       {children}
+      <ChatbotWidget />
     </AppShell>
   );
 }
