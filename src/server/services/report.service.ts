@@ -24,13 +24,33 @@ export interface ReportSection {
   rows: (string | number)[][];
 }
 
+/** A chart the PDF exporter renders natively (column / area / proportion). */
+export interface ReportChart {
+  type: "column" | "area" | "proportion";
+  title: string;
+  unit?: string;
+  data: { label: string; value: number; color?: string }[];
+}
+
 /** Normalized dataset consumed by both the preview UI and the file exporters. */
 export interface ReportDataset {
   title: string;
   generatedAt: Date;
   sections: ReportSection[];
+  charts?: ReportChart[];
   summary?: Record<string, string | number>;
 }
+
+const CHART = {
+  green: "#16a34a",
+  blue: "#2563eb",
+  purple: "#7c3aed",
+  cyan: "#0891b2",
+  amber: "#d97706",
+  orange: "#f97316",
+  red: "#dc2626",
+  slate: "#94a3b8",
+};
 
 // ----------------------------- helpers -----------------------------
 
@@ -159,10 +179,38 @@ export async function buildEnvironmentalReport(filters: ReportFilters): Promise<
     },
   ];
 
+  const deptChart = byDept
+    .map((d) => ({
+      label: d.departmentId ? deptNames.get(d.departmentId) ?? "Unknown" : "Unassigned",
+      value: tonnes(d._sum.co2eKg),
+    }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
   return {
     title: "Environmental Report",
     generatedAt: new Date(),
     sections,
+    charts: [
+      {
+        type: "column",
+        title: "Emissions by scope (tCO2e)",
+        unit: "t",
+        data: [
+          { label: "Scope 1", value: s1, color: CHART.green },
+          { label: "Scope 2", value: s2, color: CHART.blue },
+          { label: "Scope 3", value: s3, color: CHART.purple },
+        ],
+      },
+      {
+        type: "area",
+        title: "Monthly emissions trend (tCO2e)",
+        data: breakdown.trend.map((m) => ({ label: m.month, value: m.tonnes })),
+      },
+      ...(deptChart.length
+        ? [{ type: "column" as const, title: "Emissions by department (tCO2e)", data: deptChart }]
+        : []),
+    ],
     summary: {
       "Total emissions (tCO₂e)": totalTonnes,
       Transactions: totalAgg._count._all,
@@ -273,6 +321,39 @@ export async function buildSocialReport(filters: ReportFilters): Promise<ReportD
     title: "Social Report",
     generatedAt: new Date(),
     sections,
+    charts: [
+      {
+        type: "column",
+        title: "CSR participation by status",
+        data: [
+          { label: "Approved", value: partByStatus.get("APPROVED") ?? 0, color: CHART.green },
+          { label: "Pending", value: partByStatus.get("PENDING") ?? 0, color: CHART.amber },
+          { label: "Rejected", value: partByStatus.get("REJECTED") ?? 0, color: CHART.red },
+        ],
+      },
+      {
+        type: "column",
+        title: "Training completion",
+        data: [
+          { label: "Completed", value: trainingByStatus.get("COMPLETED") ?? 0, color: CHART.green },
+          { label: "In progress", value: trainingByStatus.get("IN_PROGRESS") ?? 0, color: CHART.blue },
+          { label: "Not started", value: trainingByStatus.get("NOT_STARTED") ?? 0, color: CHART.slate },
+        ],
+      },
+      ...(genderTotal
+        ? [
+            {
+              type: "proportion" as const,
+              title: "Workforce gender distribution",
+              data: genderGroups.map((g, i) => ({
+                label: humanize(g.gender),
+                value: g._count._all,
+                color: [CHART.blue, CHART.green, CHART.purple, CHART.slate][i % 4],
+              })),
+            },
+          ]
+        : []),
+    ],
     summary: {
       "CSR activities": activities.length,
       "Total participations": totalParticipations,
@@ -382,6 +463,28 @@ export async function buildGovernanceReport(filters: ReportFilters): Promise<Rep
     title: "Governance Report",
     generatedAt: new Date(),
     sections,
+    charts: [
+      {
+        type: "column",
+        title: "Compliance issues by severity",
+        data: [
+          { label: "Low", value: severityMap.get("LOW") ?? 0, color: CHART.green },
+          { label: "Medium", value: severityMap.get("MEDIUM") ?? 0, color: CHART.amber },
+          { label: "High", value: severityMap.get("HIGH") ?? 0, color: CHART.orange },
+          { label: "Critical", value: severityMap.get("CRITICAL") ?? 0, color: CHART.red },
+        ],
+      },
+      {
+        type: "column",
+        title: "Compliance issues by status",
+        data: [
+          { label: "Open", value: statusMap.get("OPEN") ?? 0, color: CHART.red },
+          { label: "In progress", value: statusMap.get("IN_PROGRESS") ?? 0, color: CHART.blue },
+          { label: "Resolved", value: statusMap.get("RESOLVED") ?? 0, color: CHART.green },
+          { label: "Closed", value: statusMap.get("CLOSED") ?? 0, color: CHART.slate },
+        ],
+      },
+    ],
     summary: {
       Policies: policies.length,
       "Avg acknowledgement %": pct(ackDoneAll, ackTotalAll),
@@ -468,6 +571,28 @@ export async function buildEsgSummaryReport(filters: ReportFilters): Promise<Rep
     title: "ESG Summary Report",
     generatedAt: new Date(),
     sections,
+    charts: [
+      {
+        type: "column",
+        title: "ESG pillar scores (/100)",
+        unit: "",
+        data: [
+          { label: "Environmental", value: scores.environmental.score, color: CHART.green },
+          { label: "Social", value: scores.social.score, color: CHART.blue },
+          { label: "Governance", value: scores.governance.score, color: CHART.purple },
+          { label: "Overall", value: scores.overall, color: CHART.cyan },
+        ],
+      },
+      ...(deptScores.length
+        ? [
+            {
+              type: "column" as const,
+              title: "Department ranking (overall score)",
+              data: deptScores.map((d) => ({ label: d.name, value: d.scores.overall })),
+            },
+          ]
+        : []),
+    ],
     summary: {
       "Overall ESG score": scores.overall,
       Grade: scoreGrade(scores.overall),
