@@ -1,0 +1,25 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: verdantiq-mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: rootverdantiq
+      MYSQL_DATABASE: verdantiq
+      MYSQL_USER: verdantiq
+      MYSQL_PASSWORD: verdantiq
+    ports:
+      - "3306:3306"
+    volumes:
+      - verdantiq_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uverdantiq", "-pverdantiq"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  verdantiq_mysql_data:
+    driver: local

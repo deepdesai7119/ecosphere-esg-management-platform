@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 \"/Users/anshu/.claude/plugins/cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"ESG sustainability enterprise dashboard admin analytics professional\" --design-system -f markdown)"
+    ]
+  }
+}
