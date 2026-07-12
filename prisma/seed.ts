@@ -199,20 +199,21 @@ async function main() {
   await prisma.department.update({ where: { id: departments.SUS }, data: { headUserId: byEmail("manager@verdantiq.demo").id, employeeCount: 19 } });
 
   // ---- Categories ----
-  const catData: { name: string; type: CategoryType }[] = [
-    { name: "Environment", type: CategoryType.CSR_ACTIVITY },
-    { name: "Community", type: CategoryType.CSR_ACTIVITY },
-    { name: "Health", type: CategoryType.CSR_ACTIVITY },
-    { name: "Energy", type: CategoryType.CHALLENGE },
-    { name: "Waste", type: CategoryType.CHALLENGE },
-    { name: "Mobility", type: CategoryType.CHALLENGE },
-    { name: "Emissions", type: CategoryType.ESG },
-    { name: "Compliance Training", type: CategoryType.TRAINING },
+  const catData: { name: string; type: CategoryType; icon: string }[] = [
+    { name: "Environment", type: CategoryType.CSR_ACTIVITY, icon: "Leaf" },
+    { name: "Community", type: CategoryType.CSR_ACTIVITY, icon: "HandHeart" },
+    { name: "Health", type: CategoryType.CSR_ACTIVITY, icon: "Heart" },
+    { name: "Energy", type: CategoryType.CHALLENGE, icon: "Lightbulb" },
+    { name: "Waste", type: CategoryType.CHALLENGE, icon: "Recycle" },
+    { name: "Mobility", type: CategoryType.CHALLENGE, icon: "Bike" },
+    { name: "Food", type: CategoryType.CHALLENGE, icon: "Sprout" },
+    { name: "Emissions", type: CategoryType.ESG, icon: "Wind" },
+    { name: "Compliance Training", type: CategoryType.TRAINING, icon: "BookOpenCheck" },
   ];
   const categories: Record<string, string> = {};
   for (const c of catData) {
     const cat = await prisma.category.create({
-      data: { organizationId: org.id, name: c.name, type: c.type },
+      data: { organizationId: org.id, name: c.name, type: c.type, icon: c.icon },
     });
     categories[`${c.type}:${c.name}`] = cat.id;
   }
@@ -266,8 +267,9 @@ async function main() {
     { name: "Reduce Office Energy Use", dept: "CORP", baseline: 110, target: 80, current: 80, unit: "t", status: GoalStatus.COMPLETED },
     { name: "Increase Recycled Material Usage", dept: "PROC", baseline: 30, target: 70, current: 58, unit: "%", status: GoalStatus.ACTIVE },
   ];
+  const goalIds: Record<string, string> = {};
   for (const g of goals) {
-    await prisma.environmentalGoal.create({
+    const created = await prisma.environmentalGoal.create({
       data: {
         organizationId: org.id,
         departmentId: departments[g.dept],
@@ -282,6 +284,7 @@ async function main() {
         status: g.status,
       },
     });
+    goalIds[g.name] = created.id;
   }
 
   // ---- Business operations + carbon transactions (12 months) ----
@@ -569,12 +572,27 @@ async function main() {
     });
   }
 
-  // ---- Challenges (different lifecycle states) + participations ----
-  const challengeData = [
-    { title: "Sustainability Sprint", cat: "Energy", xp: 200, diff: Difficulty.HARD, status: ChallengeStatus.ACTIVE, evidence: true },
-    { title: "Recycle Challenge", cat: "Waste", xp: 80, diff: Difficulty.EASY, status: ChallengeStatus.ACTIVE, evidence: true },
-    { title: "Commute Green Week", cat: "Mobility", xp: 120, diff: Difficulty.MEDIUM, status: ChallengeStatus.UNDER_REVIEW, evidence: true },
-    { title: "Paperless Office Challenge", cat: "Waste", xp: 90, diff: Difficulty.EASY, status: ChallengeStatus.DRAFT, evidence: false },
+  // ---- Challenges (different lifecycle states, icons, goal links) + participations ----
+  const challengeData: {
+    title: string;
+    cat: string;
+    icon: string;
+    xp: number;
+    diff: Difficulty;
+    status: ChallengeStatus;
+    evidence: boolean;
+    desc: string;
+    goal?: string;
+    goalContribution?: number;
+  }[] = [
+    { title: "Sustainability Sprint", cat: "Energy", icon: "Sprout", xp: 200, diff: Difficulty.HARD, status: ChallengeStatus.ACTIVE, evidence: true, desc: "Complete five eco-actions of your choice in one week — every small step counts toward our ESG score." },
+    { title: "Recycle Challenge", cat: "Waste", icon: "Recycle", xp: 80, diff: Difficulty.EASY, status: ChallengeStatus.ACTIVE, evidence: true, desc: "Sort and recycle all your office waste for two weeks — snap a photo of your sorted bins as proof." },
+    { title: "Commute Green Week", cat: "Mobility", icon: "Bus", xp: 120, diff: Difficulty.MEDIUM, status: ChallengeStatus.UNDER_REVIEW, evidence: true, desc: "Swap your car for public transport, cycling or walking for five workdays straight.", goal: "Reduce Fleet Emissions", goalContribution: 0.5 },
+    { title: "Paperless Office Challenge", cat: "Waste", icon: "TreePine", xp: 90, diff: Difficulty.EASY, status: ChallengeStatus.ACTIVE, evidence: false, desc: "Go a full week without printing — digitise your notes, sign documents electronically and share files instead of paper copies." },
+    { title: "EV Bikes", cat: "Mobility", icon: "Bike", xp: 100, diff: Difficulty.MEDIUM, status: ChallengeStatus.ACTIVE, evidence: true, desc: "Ride an e-bike or EV for your commute at least three days this week. Each approved participation cuts our fleet emissions by 1 tonne of CO₂e.", goal: "Reduce Fleet Emissions", goalContribution: 1 },
+    { title: "Meat-Free Monday", cat: "Food", icon: "Sprout", xp: 50, diff: Difficulty.EASY, status: ChallengeStatus.ACTIVE, evidence: false, desc: "Choose plant-based meals every Monday this month and log your lunch — good for you, great for the planet." },
+    { title: "Lights-Off Hero", cat: "Energy", icon: "Lightbulb", xp: 60, diff: Difficulty.EASY, status: ChallengeStatus.ACTIVE, evidence: true, desc: "Last one out? Switch off lights, monitors and the AC — photograph the dark office as your evidence." },
+    { title: "Bottle-Free July", cat: "Waste", icon: "Droplets", xp: 120, diff: Difficulty.MEDIUM, status: ChallengeStatus.DRAFT, evidence: true, desc: "Ditch single-use plastic bottles — bring your reusable bottle every day this month." },
   ];
   const challenges: { id: string; xp: number; status: ChallengeStatus; evidence: boolean }[] = [];
   for (const c of challengeData) {
@@ -584,13 +602,16 @@ async function main() {
         departmentId: departments.SUS,
         categoryId: categories[`CHALLENGE:${c.cat}`],
         title: c.title,
-        description: `${c.title} — earn ${c.xp} XP on completion.`,
+        description: c.desc,
+        icon: c.icon,
         xp: c.xp,
         difficulty: c.diff,
         evidenceRequired: c.evidence,
         startDate: daysAgo(10),
         deadline: daysFromNow(12),
         status: c.status,
+        goalId: c.goal ? goalIds[c.goal] : null,
+        goalContribution: c.goalContribution ?? null,
         createdById: byEmail("manager@verdantiq.demo").id,
       },
     });
@@ -629,7 +650,7 @@ async function main() {
     { name: "Carbon Saver", icon: "Leaf", metric: UnlockMetric.COMPLETED_CHALLENGES, threshold: 5, desc: "Complete 5 challenges." },
     { name: "Sustainability Champion", icon: "Trophy", metric: UnlockMetric.TOTAL_XP, threshold: 3000, desc: "Reach 3000 XP." },
     { name: "Policy Pro", icon: "ShieldCheck", metric: UnlockMetric.POLICY_ACKNOWLEDGEMENTS, threshold: 3, desc: "Acknowledge 3 policies." },
-    { name: "CSR Hero", icon: "HeartHandshake", metric: UnlockMetric.CSR_PARTICIPATIONS, threshold: 3, desc: "Approved in 3 CSR activities." },
+    { name: "CSR Hero", icon: "HandHeart", metric: UnlockMetric.CSR_PARTICIPATIONS, threshold: 3, desc: "Approved in 3 CSR activities." },
   ];
   const badges: { id: string; metric: UnlockMetric; threshold: number }[] = [];
   for (const b of badgeData) {

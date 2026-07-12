@@ -16,10 +16,14 @@ export default async function ChallengesPage({
   const user = await requireUser();
   const { new: openNew } = await searchParams;
 
-  const [challenges, categories, departments, myParts] = await Promise.all([
+  const [challenges, categories, departments, goals, myParts] = await Promise.all([
     prisma.challenge.findMany({
       where: { organizationId: user.organizationId },
-      include: { category: { select: { name: true } }, _count: { select: { participations: true } } },
+      include: {
+        category: { select: { name: true, icon: true } },
+        goal: { select: { name: true, unit: true } },
+        _count: { select: { participations: true } },
+      },
       orderBy: { createdAt: "desc" },
     }),
     prisma.category.findMany({
@@ -30,6 +34,11 @@ export default async function ChallengesPage({
     prisma.department.findMany({
       where: { organizationId: user.organizationId, status: "ACTIVE" },
       select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.environmentalGoal.findMany({
+      where: { organizationId: user.organizationId, status: { not: "COMPLETED" } },
+      select: { id: true, name: true, unit: true },
       orderBy: { name: "asc" },
     }),
     prisma.challengeParticipation.findMany({
@@ -54,6 +63,7 @@ export default async function ChallengesPage({
         joinedIds={myParts.map((p) => p.challengeId)}
         categories={categories.map((c) => ({ label: c.name, value: c.id }))}
         departments={departments.map((d) => ({ label: d.name, value: d.id }))}
+        goals={goals.map((g) => ({ label: `${g.name} (${g.unit})`, value: g.id }))}
         autoOpen={openNew === "1" && can(user.role, "challenge.manage")}
       />
     </>
