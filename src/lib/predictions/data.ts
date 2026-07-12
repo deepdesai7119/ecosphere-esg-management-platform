@@ -148,7 +148,8 @@ export async function getComplianceRisk(
 
   const resolutionDays = resolvedIssues
     .map((i) => (i.resolvedAt ? (i.resolvedAt.getTime() - i.createdAt.getTime()) / 86_400_000 : null))
-    .filter((d): d is number => d !== null);
+    // Ignore bad rows where resolvedAt precedes createdAt (seed/backfill artifacts).
+    .filter((d): d is number => d !== null && d >= 0);
   const avgResolutionDays =
     resolutionDays.length > 0
       ? Math.round(resolutionDays.reduce((s, d) => s + d, 0) / resolutionDays.length)

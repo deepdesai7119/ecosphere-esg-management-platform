@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MessageCircle, X, Send, Loader2, Sparkles } from "lucide-react";
+import { api } from "@/lib/api-client";
+import type { ChatbotReply } from "@/lib/predictions/chatbot";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -14,28 +16,46 @@ const SUGGESTIONS = [
   "Which compliance issues are at risk?",
 ];
 
+const GREETING: ChatMessage = {
+  role: "assistant",
+  text: "Hi! Ask me about emissions trends, ESG score trajectory, or compliance risk.",
+};
+
+/** Renders the bot's lightweight markdown: only `**bold**` segments. */
+function MessageText({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") ? (
+          <strong key={i}>{part.slice(2, -2)}</strong>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 /**
- * Floating ESG analytics chatbot. Drop this once into the dashboard layout, e.g.:
- *   src/app/(dashboard)/layout.tsx
- *     ...
- *     {children}
- *     <ChatbotWidget />
+ * Floating ESG analytics chatbot. Dropped once into the dashboard layout
+ * (src/app/(dashboard)/layout.tsx) so it's available on every dashboard page.
  */
 export function ChatbotWidget() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      text: "Hi! Ask me about emissions trends, ESG score trajectory, or compliance risk.",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
 
   async function send(text: string) {
     const trimmed = text.trim();
@@ -46,26 +66,22 @@ export function ChatbotWidget() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chatbot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
-      });
-      const data = await res.json();
+      const reply = await api.post<ChatbotReply>("/api/chatbot", { message: trimmed });
+      setMessages((prev) => [...prev, { role: "assistant", text: reply.text }]);
+    } catch (error) {
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          text: res.ok ? data.text : (data.error ?? "Something went wrong."),
+          text:
+            error instanceof Error && error.message
+              ? error.message
+              : "Couldn't reach the server. Please try again.",
         },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: "Couldn't reach the server. Please try again." },
       ]);
     } finally {
       setLoading(false);
+      inputRef.current?.focus();
     }
   }
 
@@ -99,7 +115,7 @@ export function ChatbotWidget() {
                       : "border border-slate-200 bg-white text-slate-800"
                   }`}
                 >
-                  {m.text}
+                  <MessageText text={m.text} />
                 </div>
               </div>
             ))}
@@ -136,7 +152,9 @@ export function ChatbotWidget() {
             className="flex items-center gap-2 border-t border-slate-200 bg-white p-3"
           >
             <input
+              ref={inputRef}
               value={input}
+              maxLength={500}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask about emissions, score, compliance…"
               className="flex-1 rounded-full border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
@@ -156,7 +174,7 @@ export function ChatbotWidget() {
       {/* Floating icon */}
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="Open ESG assistant"
+        aria-label={open ? "Close ESG assistant" : "Open ESG assistant"}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:bg-emerald-700"
       >
         {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
