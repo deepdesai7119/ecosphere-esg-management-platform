@@ -23,6 +23,7 @@ const optionalId = z
 export const challengeCreateSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
+  icon: z.string().optional(),
   categoryId: optionalId,
   departmentId: optionalId,
   xp: z.coerce.number().int().default(0),
@@ -31,6 +32,8 @@ export const challengeCreateSchema = z.object({
   startDate: z.coerce.date().optional(),
   deadline: z.coerce.date().optional(),
   status: z.enum(CHALLENGE_STATUS).optional(),
+  goalId: optionalId,
+  goalContribution: z.coerce.number().min(0, "Contribution cannot be negative").optional(),
 });
 export const challengeUpdateSchema = challengeCreateSchema.partial();
 
